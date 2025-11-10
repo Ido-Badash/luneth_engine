@@ -1,3 +1,4 @@
+import inspect
 from typing import Any, Dict, Optional
 
 from .constants import DEFAULT_ACTION, DEFAULT_TRIGGER
@@ -27,8 +28,21 @@ class GlobalInputs:
         action = action if action else old.get("action", DEFAULT_ACTION)
         self.actions[name] = {"trigger": trigger, "action": action}
 
-    def update(self):
-        """Call this every frame with events"""
+    def update(self, events=None, dt: Optional[float] = None):
+        """Call this every frame (events and dt optional)."""
         for action in self.actions.values():
-            if action["trigger"]():
-                action["action"]()
+            if self._safe_call(action["trigger"], events, dt):
+                self._safe_call(action["action"], events, dt)
+
+    def _safe_call(func, *args):
+        """Call a function with args only if it expects them"""
+        try:
+            sig = inspect.signature(func)
+            if len(sig.parameters) == 0:
+                return func()
+            elif len(sig.parameters) == 1:
+                return func(args[0])
+            else:
+                return func(*args)
+        except Exception:
+            return None
