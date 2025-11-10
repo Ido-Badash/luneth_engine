@@ -9,7 +9,12 @@ class GlobalInputs:
     def __init__(self, actions: Optional[ActionDict] = None):
         self.actions: ActionDict = actions if actions else {}
 
-    def add_action(self, name: str, trigger: Trigger, action: ActionFunc):
+    def add_action(
+        self,
+        name: str,
+        trigger: Optional[Trigger] = DEFAULT_TRIGGER,
+        action: Optional[ActionFunc] = DEFAULT_ACTION,
+    ):
         self.actions[name] = {"trigger": trigger, "action": action}
 
     def get_action(
@@ -28,21 +33,17 @@ class GlobalInputs:
         action = action if action else old.get("action", DEFAULT_ACTION)
         self.actions[name] = {"trigger": trigger, "action": action}
 
-    def update(self, events=None, dt: Optional[float] = None):
-        """Call this every frame (events and dt optional)."""
-        for action in self.actions.values():
-            if self._safe_call(action["trigger"], events, dt):
-                self._safe_call(action["action"], events, dt)
-
-    def _safe_call(func, *args):
-        """Call a function with args only if it expects them"""
+    def _safe_call(self, func, *args):
+        """Call function safely, ignoring unexpected args errors"""
         try:
-            sig = inspect.signature(func)
-            if len(sig.parameters) == 0:
+            return func(*args)
+        except TypeError:
+            try:
                 return func()
-            elif len(sig.parameters) == 1:
-                return func(args[0])
-            else:
-                return func(*args)
-        except Exception:
-            return None
+            except Exception:
+                return None
+
+    def update(self, events=None, dt: Optional[float] = None):
+        for a in self.actions.values():
+            if self._safe_call(a["trigger"], events, dt):
+                self._safe_call(a["action"], events, dt)
