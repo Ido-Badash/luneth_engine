@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from luneth_engine.utils.general_utils import next_in_lst, previous_in_lst
 
@@ -6,10 +6,15 @@ from .state import State
 
 
 class StateManager:
-    def __init__(self):
-        self.states: List[State] = []
+    def __init__(self, states: Optional[List[State]] = None):
+        self.states: List[State] = states if states else []
         self.state = None
         self.index = -1
+
+        # init first state if states param was provided
+        if self.states:
+            self.index = 0
+            self.state = self.states[0]
 
     def add(self, state):
         self.states.append(state)
@@ -46,3 +51,27 @@ class StateManager:
 
     def unfinished_states(self) -> List:
         return [s for s in self.states if not s.done]
+
+    def find_state_by_name(self, name: str):
+        for i, state in enumerate(self.states):
+            if state.name == name:
+                return i
+        return None
+
+    def default_switcher(self):
+        """Default state switcher, used in the bottom of a While loop\n
+        Returns `False` if didnt find a state"""
+        next_state_name = self.state.next
+        self.state.done = False  # reset
+        self.state.next = None  # clear
+
+        # find and switch to the named state
+        state_idx = self.find_state_by_name(next_state_name)
+        if state_idx is not None:
+            self.set_state(state_idx)
+            self.state.startup()
+            return True
+        else:
+            print(f"Warning: State '{next_state_name}' not found")
+            self.state = None  # clear current state
+            return False  # no matching state found

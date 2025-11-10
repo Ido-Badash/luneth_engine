@@ -1,6 +1,8 @@
 import pygame
 
+from config import _config
 from luneth_engine import core
+from states_enum import States
 
 
 class Menu(core.State):
@@ -8,9 +10,10 @@ class Menu(core.State):
         super().__init__("Menu")
 
     def get_event(self, event: pygame.event.Event):
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_1:
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_2:
             print("→ Switching to Game")
             self.done = True
+            self.next = States.GAME
 
     def draw(self, screen: pygame.Surface):
         screen.fill((191, 172, 170))
@@ -26,9 +29,10 @@ class Game(core.State):
         super().__init__("Game")
 
     def get_event(self, event: pygame.event.Event):
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-            print("→ Exiting Game")
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_1:
+            print("→ Switching to Menu")
             self.done = True
+            self.next = States.MENU
 
     def draw(self, screen: pygame.Surface):
         screen.fill((5, 32, 74))
@@ -40,26 +44,25 @@ class Game(core.State):
 
 
 def main():
-    pygame.init()
-    screen = pygame.display.set_mode((640, 480))
-    clock = pygame.time.Clock()
+    # states
+    _states = [Menu(), Game()]
 
     # core systems
-    settings = core.SharedSettings()
+    ss = core.SharedSettings(_config)
+    sm = core.StateManager(_states)
     tm = core.TimeManager()
-    sm = core.StateManager()
 
-    # set settings
-    settings.add("fps", 60)
+    # init pygame
+    pygame.init()
+    screen = pygame.display.set_mode((ss.get("screen_w", 640), ss.get("screen_h", 480)))
+    clock = pygame.time.Clock()
 
-    # add states
-    sm.add(Menu())
-    sm.add(Game())
+    # startup first state
     sm.state.startup()
 
     running = True
     while running and sm.state:
-        dt = clock.tick(settings.get("fps", 60)) / 1000.0  # seconds
+        dt = clock.tick(ss.get("fps", 60)) / 1000.0  # seconds
         tm.update(dt)
 
         # event handle
@@ -72,12 +75,9 @@ def main():
         # update + draw
         sm.state.update(screen, dt)
 
+        # find and switch to the named state
         if sm.state.done:
-            sm.next_state()
-            if sm.state:
-                sm.state.startup()
-            else:
-                running = False
+            sm.default_switcher()
 
     pygame.quit()
 

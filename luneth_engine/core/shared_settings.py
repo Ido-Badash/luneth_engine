@@ -1,14 +1,15 @@
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 
 class SharedSettings:
-    def __init__(self):
-        self.settings = {}
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
+        self.settings = config if config else {}
 
     def add(self, setting_name: str, value: Any = None):
         self.settings[setting_name] = value
 
     def get(self, setting_name: str, default: Any = None):
+        default = default if default else self.settings[setting_name]
         return self.settings.get(setting_name, default)
 
     def set(self, setting_name: str, new_value: Any = None):
