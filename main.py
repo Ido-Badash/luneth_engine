@@ -2,14 +2,14 @@
 
 import pygame
 
+import luneth_engine as le
 from config import _config
-from luneth_engine import core
 from states_enum import States
 
 
-class Menu(core.State):
+class Menu(le.State):
     def __init__(self):
-        super().__init__(States.GAME)
+        super().__init__(States.MENU)
 
     def get_event(self, event: pygame.event.Event):
         if event.type == pygame.KEYDOWN and event.key == pygame.K_2:
@@ -26,7 +26,7 @@ class Menu(core.State):
         super().update(screen, dt)
 
 
-class Game(core.State):
+class Game(le.State):
     def __init__(self):
         super().__init__(States.GAME)
 
@@ -49,10 +49,10 @@ def main():
     # states
     _states = [Menu(), Game()]
 
-    # core systems
-    ss = core.SharedSettings(_config)
-    sm = core.StateManager(_states)
-    tm = core.TimeManager()
+    # le systems
+    ss = le.SharedSettings(_config)
+    sm = le.StateManager(_states)
+    tm = le.TimeManager()
 
     # init pygame
     pygame.init()
