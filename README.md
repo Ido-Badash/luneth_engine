@@ -1,15 +1,19 @@
 # Luneth Engine
 
-A lightweight 2D game engine built with Pygame.
+Luneth Engine is a lightweight pure Python 2D game engine.  
+It provides core systems for managing game states, timers, global inputs, and shared settings, without any third-party dependencies.
 
 ## Features
-- State management system
-- Time management with timers
-- Input action system
-- Shared settings
 
-## Quick Start
-```python
-pip install -r requirements.txt
-python main.py
-```
+- State management (`State` and `StateManager`)
+- Timer management (`TimeManager`)
+- Global settings (`SharedSettings`)
+- Global input handling (`GlobalInputs`)
+- Fully modular and easy to extend
+
+## Installation
+
+Install locally:
+
+```bash
+pip install -e .

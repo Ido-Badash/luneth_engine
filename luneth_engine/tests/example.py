@@ -1,10 +1,12 @@
 # This code is an example on how to use the Luneth Engine
+# Use "python -m luneth_engine.tests.example" at root to run
 
 import pygame
 
 import luneth_engine as le
-from config import _config
-from states_enum import States
+from luneth_engine.tests.config import _config
+
+from .states_enum import States
 
 
 class Menu(le.State):
@@ -84,6 +86,5 @@ def main():
     pygame.quit()
 
 
-# --- Main Game Loop ---
 if __name__ == "__main__":
     main()
