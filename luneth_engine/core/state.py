@@ -3,8 +3,9 @@ from typing import Optional
 
 
 class State(ABC):
-    def __init__(self, name: str):
+    def __init__(self, name: str, game=None):
         self.name = name
+        self.game = game
         self.done = False
         self.next: Optional[str] = None
         self.previous: Optional[str] = None
