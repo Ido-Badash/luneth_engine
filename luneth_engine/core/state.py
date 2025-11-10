@@ -5,21 +5,17 @@ class State(ABC):
     def __init__(self, name: str):
         self.name = name
         self.done = False
-        self.next: State = None
-        self.previous: State = None
+        self.next: str = None
+        self.previous: str = None
 
-    def startup(self):
-        pass
-
-    @abstractmethod
-    def get_event(self, event):
-        pass
+    def startup(self): ...
 
     @abstractmethod
-    def draw(self, screen):
-        pass
+    def get_event(self, event): ...
+
+    @abstractmethod
+    def draw(self, screen): ...
 
     @abstractmethod
     def update(self, screen, dt: float):
-
         self.draw(screen)

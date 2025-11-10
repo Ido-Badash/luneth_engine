@@ -1,7 +1,7 @@
 from typing import Any, Dict, Optional
 
-from constants import DEFAULT_ACTION, DEFAULT_TRIGGER
-from core_types import Action, ActionDict, ActionFunc, Trigger
+from .constants import DEFAULT_ACTION, DEFAULT_TRIGGER
+from .core_types import Action, ActionDict, ActionFunc, Trigger
 
 
 class GlobalInputs:

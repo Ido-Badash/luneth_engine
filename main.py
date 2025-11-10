@@ -1,54 +1,87 @@
-import sys
-
 import pygame
 
-from config import *
+from luneth_engine import core
+
+
+class Menu(core.State):
+    def __init__(self):
+        super().__init__("Menu")
+
+    def get_event(self, event: pygame.event.Event):
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_1:
+            print("→ Switching to Game")
+            self.done = True
+
+    def draw(self, screen: pygame.Surface):
+        screen.fill((191, 172, 170))
+        pygame.display.set_caption("Menu")
+        pygame.display.flip()
+
+    def update(self, screen: pygame.Surface, dt):
+        super().update(screen, dt)
+
+
+class Game(core.State):
+    def __init__(self):
+        super().__init__("Game")
+
+    def get_event(self, event: pygame.event.Event):
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            print("→ Exiting Game")
+            self.done = True
+
+    def draw(self, screen: pygame.Surface):
+        screen.fill((5, 32, 74))
+        pygame.display.set_caption("Game")
+        pygame.display.flip()
+
+    def update(self, screen: pygame.Surface, dt):
+        super().update(screen, dt)
 
 
 def main():
-    """Main game loop"""
     pygame.init()
-
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("Space Station Manager")
+    screen = pygame.display.set_mode((640, 480))
     clock = pygame.time.Clock()
 
-    # TODO: Initialize game systems
-    # game_state = GameState()
-    # renderer = Renderer(view)
-    # input_handler = InputHandler(view)
+    # core systems
+    settings = core.SharedSettings()
+    tm = core.TimeManager()
+    sm = core.StateManager()
+
+    # set settings
+    settings.add("fps", 60)
+
+    # add states
+    sm.add(Menu())
+    sm.add(Game())
+    sm.state.startup()
 
     running = True
-    while running:
-        dt = clock.tick(FPS) / 1000.0
+    while running and sm.state:
+        dt = clock.tick(settings.get("fps", 60)) / 1000.0  # seconds
+        tm.update(dt)
 
-        # Event handling
+        # event handle
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            # TODO: Handle input
-            # command = input_handler.handle_event(event, game_state)
-            # if command:
-            #     game_state.execute_command(command)
+            else:
+                sm.state.get_event(event)
 
-        # Update game logic
-        # TODO: game_state.update(dt)
+        # update + draw
+        sm.state.update(screen, dt)
 
-        # Render
-        screen.fill(Theme.CURSED_BLACK)
-        # TODO: renderer.render(screen, game_state)
-
-        # Temporary placeholder text
-        font = pygame.font.Font(None, 48)
-        text = font.render("Space Station Manager", True, (255, 255, 255))
-        text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
-        screen.blit(text, text_rect)
-
-        pygame.display.flip()
+        if sm.state.done:
+            sm.next_state()
+            if sm.state:
+                sm.state.startup()
+            else:
+                running = False
 
     pygame.quit()
-    sys.exit()
 
 
+# --- Main Game Loop ---
 if __name__ == "__main__":
     main()
