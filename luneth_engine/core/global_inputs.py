@@ -1,6 +1,5 @@
 import inspect
 from typing import Any, Dict, Optional
-
 from .constants import DEFAULT_ACTION, DEFAULT_TRIGGER
 from .core_types import Action, ActionDict, ActionFunc, Trigger
 
@@ -29,21 +28,33 @@ class GlobalInputs:
         action: Optional[ActionFunc] = DEFAULT_ACTION,
     ):
         old = self.actions.get(name, {})
-        trigger = trigger if trigger else old.get("trigger", DEFAULT_TRIGGER)
-        action = action if action else old.get("action", DEFAULT_ACTION)
+        trigger = trigger or old.get("trigger", DEFAULT_TRIGGER)
+        action = action or old.get("action", DEFAULT_ACTION)
         self.actions[name] = {"trigger": trigger, "action": action}
 
-    def _safe_call(self, func, *args):
-        """Call function safely, ignoring unexpected args errors"""
+    def _smart_call(self, func, events=None, dt=None):
+        """Call func() based on its signature"""
         try:
-            return func(*args)
-        except TypeError:
-            try:
-                return func()
-            except Exception:
-                return None
+            sig = inspect.signature(func)
+            params = list(sig.parameters.keys())
 
-    def update(self, events=None, dt: Optional[float] = None):
+            # match by parameter names
+            if len(params) == 0:
+                return func()
+            elif len(params) == 1:
+                if "events" in params:
+                    return func(events)
+                elif "dt" in params:
+                    return func(dt)
+                else:
+                    return func()  # unknown param name, fallback
+            elif len(params) >= 2:
+                return func(events, dt)
+        except Exception:
+            return None
+
+    def update(self, events=None, dt=None):
+        """Update all actions"""
         for a in self.actions.values():
-            if self._safe_call(a["trigger"], events, dt):
-                self._safe_call(a["action"], events, dt)
+            if self._smart_call(a["trigger"], events, dt):
+                self._smart_call(a["action"], events, dt)
