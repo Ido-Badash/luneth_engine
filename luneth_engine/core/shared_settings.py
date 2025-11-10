@@ -1,9 +1,17 @@
+from pathlib import Path
 from typing import Any, Dict, Optional
+
+from luneth_engine.utils.json_utils import dict_from_json_file, dict_to_json_file
+
+from .constants import SETTINGS_FILE
 
 
 class SharedSettings:
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, config: Optional[Dict[str, Any]] = None, json_path: Optional[str] = None
+    ):
         self.settings = config if config else {}
+        self.path = Path(json_path) if json_path else Path(SETTINGS_FILE)
 
     def add(self, setting_name: str, value: Any = None):
         self.settings[setting_name] = value
@@ -21,11 +29,9 @@ class SharedSettings:
         return self.settings.items()
 
     def save(self):
-        # Will save current settings into a json file
-        # Not needed for now
-        pass
+        self.path.parent.mkdir(parents=True, exist_ok=True)  # make sure folder exists
+        dict_to_json_file(self.settings, self.path)
 
     def load(self):
-        # Loads the json file and replaces self.settings
-        # Not needed for now
-        pass
+        if self.path.exists():
+            self.settings = dict_from_json_file(self.path)
