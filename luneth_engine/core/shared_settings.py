@@ -9,7 +9,6 @@ class SharedSettings:
         self.settings[setting_name] = value
 
     def get(self, setting_name: str, default: Any = None):
-        default = default if default else self.settings[setting_name]
         return self.settings.get(setting_name, default)
 
     def set(self, setting_name: str, new_value: Any = None):

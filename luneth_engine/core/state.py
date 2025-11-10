@@ -1,12 +1,13 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
 
 class State(ABC):
     def __init__(self, name: str):
         self.name = name
         self.done = False
-        self.next: str = None
-        self.previous: str = None
+        self.next: Optional[str] = None
+        self.previous: Optional[str] = None
 
     def startup(self): ...
 

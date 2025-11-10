@@ -7,7 +7,7 @@ from states_enum import States
 
 class Menu(core.State):
     def __init__(self):
-        super().__init__("Menu")
+        super().__init__(States.GAME)
 
     def get_event(self, event: pygame.event.Event):
         if event.type == pygame.KEYDOWN and event.key == pygame.K_2:
@@ -26,7 +26,7 @@ class Menu(core.State):
 
 class Game(core.State):
     def __init__(self):
-        super().__init__("Game")
+        super().__init__(States.GAME)
 
     def get_event(self, event: pygame.event.Event):
         if event.type == pygame.KEYDOWN and event.key == pygame.K_1:
