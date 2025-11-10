@@ -5,8 +5,7 @@ from .core_types import Action, ActionDict, ActionFunc, Trigger
 
 
 class GlobalInputs:
-    def __init__(self, settings: Dict[str, Any], actions: Optional[ActionDict] = None):
-        self.settings: Dict[str, Any] = settings
+    def __init__(self, actions: Optional[ActionDict] = None):
         self.actions: ActionDict = actions if actions else {}
 
     def add_action(self, name: str, trigger: Trigger, action: ActionFunc):
