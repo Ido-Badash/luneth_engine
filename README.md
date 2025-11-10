@@ -13,7 +13,3 @@ A lightweight 2D game engine built with Pygame.
 pip install -r requirements.txt
 python main.py
 ```
-
-## Controls
-- Menu: Press `2` to start game
-- Game: Press `1` to return to menu

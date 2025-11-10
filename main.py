@@ -1,3 +1,5 @@
+# This code is an example on how to use the Luneth Engine
+
 import pygame
 
 from config import _config
