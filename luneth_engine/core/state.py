@@ -9,8 +9,7 @@ class State(ABC):
         self.done = False
         self.next: Optional[str] = None
 
-    def startup(self):
-        self.done = False
+    def startup(self): ...
 
     def cleanup(self): ...
 
