@@ -32,11 +32,6 @@ def state_changed(func: Callable):
     return wrapper
 
 
-from typing import List, Optional
-from .state import State
-from luneth_engine import state_changed
-
-
 class StateManager:
     def __init__(self, states: Optional[List[State]] = None):
         self.states: List[State] = states or []
