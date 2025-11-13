@@ -1,7 +1,7 @@
-def cycle_lst(lst, current_idx: int, step: int):
+def cycle_lst(lst, current_idx: int, step: int) -> int:
     if not lst:
         return None
-    return lst[(current_idx + step) % len(lst)]
+    return (current_idx + step) % len(lst)
 
 
 def next_in_lst(lst, current_idx: int):

@@ -15,85 +15,83 @@ def state_changed(func: Callable):
     """
 
     def wrapper(self, *args, **kwargs):
+        # save old state
         old_state = self.state
-        old_state.cleanup()
+
+        if old_state is not None:
+            old_state.cleanup()
+
         res = func(self, *args, **kwargs)
-        self.state.done = False
-        self.state.startup()
+
+        if self.state is not None:
+            self.state.done = False
+            self.state.startup()
+
         return res
 
     return wrapper
 
 
+from typing import List, Optional
+from .state import State
+from luneth_engine import state_changed
+
+
 class StateManager:
     def __init__(self, states: Optional[List[State]] = None):
-        self.states: List[State] = states if states else []
-        self.state = None
-        self.index = -1
+        self.states: List[State] = states or []
+        self.index: int = 0 if self.states else -1
+        self.state: Optional[State] = self.states[0] if self.states else None
 
-        # init first state if states param was provided
-        if self.states:
-            self.index = 0
-            self.state = self.states[0]
-
-    def add(self, state):
+    def add(self, state: State):
+        """
+        Add a new state to the manager.
+        """
         self.states.append(state)
         if self.index == -1:
             self.index = 0
             self.state = state
 
-    def remove(self, idx) -> State:
+    def remove(self, idx: int) -> State:
+        """
+        Remove a state by its index.
+        Returns the removed state.
+        """
         removed = self.states.pop(idx)
-        if idx == self.index:
+        if not self.states:
+            # No states left
+            self.state = None
+            self.index = -1
+        elif idx == self.index:
+            # If removing current state, switch to closest
             self.index = min(idx, len(self.states) - 1)
-            self.state = self.states[self.index] if self.states else None
+            self.state = self.states[self.index]
         elif idx < self.index:
+            # Adjust current index if needed
             self.index -= 1
         return removed
 
-    def state_idx(self, state) -> int:
-        return self.states.index(state)
-
     @state_changed
     def set_state(self, idx: int):
+        """
+        Switch to a state by index.
+        """
+        if idx < 0 or idx >= len(self.states):
+            raise IndexError("State index out of range")
         self.index = idx
         self.state = self.states[idx]
 
-    @state_changed
-    def next_state(self):
-        self.state = next_in_lst(self.states, self.index)
-        self.index = self.state_idx(self.state)
-
-    @state_changed
-    def previous_state(self):
-        self.state = previous_in_lst(self.states, self.index)
-        self.index = self.state_idx(self.state)
-
-    def finished_states(self) -> List:
-        return [s for s in self.states if s.done]
-
-    def unfinished_states(self) -> List:
-        return [s for s in self.states if not s.done]
-
-    def find_state_by_name(self, name: str):
-        for i, state in enumerate(self.states):
-            if state.name == name:
+    def find_state_by_name(self, name: str) -> Optional[int]:
+        """
+        Return the index of a state by its name, or None if not found.
+        """
+        for i, s in enumerate(self.states):
+            if s.name == name:
                 return i
         return None
 
-    def default_switcher(self):
-        """Default state switcher, used in the bottom of a While loop\n
-        Returns `False` if didnt find a state"""
-        next_state_name = self.state.next
-        self.state.done = False  # reset
-        self.state.next = None  # clear
+    def next_state(self):
+        self.set_state(next_in_lst(self.states, self.index))
 
-        # find and switch to the named state
-        state_idx = self.find_state_by_name(next_state_name)
-        if state_idx is not None:
-            self.set_state(state_idx)
-            return True
-        else:
-            print(f"Warning: State '{next_state_name}' not found")
-            self.state = None  # clear current state
-            return False  # no matching state found
+    def previous_state(self):
+        self.set_state(previous_in_lst(self.states, self.index))

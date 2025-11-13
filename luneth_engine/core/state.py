@@ -9,9 +9,11 @@ class State(ABC):
         self.done = False
         self.next: Optional[str] = None
 
-    def startup(self): ...
+    def startup(self):
+        pass
 
-    def cleanup(self): ...
+    def cleanup(self):
+        pass
 
     @abstractmethod
     def get_event(self, event): ...
