@@ -15,10 +15,13 @@ def state_changed(func: Callable):
     """
 
     def wrapper(self, *args, **kwargs):
-        self.state.cleanup()
-        self.state.done = True
-        res = func(self, *args, **kwargs)
-        self.state.startup()
+        old_state = self.state
+        old_state.cleanup()  # clean old state
+        old_state.done = True  # mark old state as done
+        res = func(self, *args, **kwargs)  # func changes current state
+        self.state.startup()  # startup new state
+        old_state.done = False  # reset
+        old_state.next = None  # clear
         return res
 
     return wrapper

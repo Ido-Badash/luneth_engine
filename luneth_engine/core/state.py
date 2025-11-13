@@ -8,10 +8,10 @@ class State(ABC):
         self.game = game
         self.done = False
         self.next: Optional[str] = None
-        self.previous: Optional[str] = None
 
-    def startup(self): ...
-    
+    def startup(self):
+        self.done = False
+
     def cleanup(self): ...
 
     @abstractmethod
