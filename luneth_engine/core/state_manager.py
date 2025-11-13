@@ -1,8 +1,27 @@
-from typing import List, Optional
+from typing import List, Optional, Callable
 
 from luneth_engine.utils.general_utils import next_in_lst, previous_in_lst
 
 from .state import State
+
+
+def state_changed(func: Callable):
+    """
+    A decorator for function that change the current state
+
+    cleanup current state -> declare it as done -> func() -> startup new state
+
+    Wrapper returns the result from func()
+    """
+
+    def wrapper(self, *args, **kwargs):
+        self.state.cleanup()
+        self.state.done = True
+        res = func(self, *args, **kwargs)
+        self.state.startup()
+        return res
+
+    return wrapper
 
 
 class StateManager:
@@ -34,14 +53,17 @@ class StateManager:
     def state_idx(self, state) -> int:
         return self.states.index(state)
 
+    @state_changed
     def set_state(self, idx: int):
         self.index = idx
         self.state = self.states[idx]
 
+    @state_changed
     def next_state(self):
         self.state = next_in_lst(self.states, self.index)
         self.index = self.state_idx(self.state)
 
+    @state_changed
     def previous_state(self):
         self.state = previous_in_lst(self.states, self.index)
         self.index = self.state_idx(self.state)
@@ -69,7 +91,6 @@ class StateManager:
         state_idx = self.find_state_by_name(next_state_name)
         if state_idx is not None:
             self.set_state(state_idx)
-            self.state.startup()
             return True
         else:
             print(f"Warning: State '{next_state_name}' not found")
