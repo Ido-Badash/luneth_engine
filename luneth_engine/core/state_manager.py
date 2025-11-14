@@ -1,21 +1,11 @@
 from typing import List, Optional, Callable
 
 from luneth_engine.utils.general_utils import next_in_lst, previous_in_lst
-
 from .state import State
 
 
 def state_changed(func: Callable):
-    """
-    A decorator for function that change the current state
-
-    cleanup current state -> declare it as done -> func() -> startup new state
-
-    Wrapper returns the result from func()
-    """
-
     def wrapper(self, *args, **kwargs):
-        # save old state
         old_state = self.state
 
         if old_state is not None:
@@ -23,70 +13,92 @@ def state_changed(func: Callable):
 
         res = func(self, *args, **kwargs)
 
-        if self.state is not None:
-            self.state.done = False
-            self.state.startup()
+        new_state = self.state
+
+        if old_state != new_state and self.on_state_change is not None:
+            self.on_state_change(old_state, new_state)
+
+        if new_state is not None:
+            new_state.startup()
 
         return res
 
     return wrapper
 
 
-class StateManager:
-    def __init__(self, states: Optional[List[State]] = None):
-        self.states: List[State] = states or []
-        self.index: int = 0 if self.states else -1
-        self.state: Optional[State] = self.states[0] if self.states else None
+ON_STATE_CHANGE_TYPE = Callable[[Optional[State], Optional[State]], None]
 
+
+class StateManager:
+    def __init__(
+        self,
+        states: Optional[List[State]] = None,
+        on_state_change: Optional[ON_STATE_CHANGE_TYPE] = None,
+    ):
+        self.states: List[State] = states or []
+        self.state: Optional[State] = self.states[0] if states else None
+        self.on_state_change = on_state_change
+
+    # --- index handling ---
+    @property
+    def index(self) -> int:
+        if self.state is None:
+            return -1
+        return self.states.index(self.state)
+
+    @index.setter
+    def index(self, val: int):
+        if 0 <= val < len(self.states):
+            self.state = self.states[val]
+        else:
+            self.state = None
+
+    # --- state list management ---
     def add(self, state: State):
-        """
-        Add a new state to the manager.
-        """
         self.states.append(state)
-        if self.index == -1:
-            self.index = 0
+        if self.state is None:
             self.state = state
 
     def remove(self, idx: int) -> State:
-        """
-        Remove a state by its index.
-        Returns the removed state.
-        """
         removed = self.states.pop(idx)
+
         if not self.states:
-            # No states left
             self.state = None
-            self.index = -1
-        elif idx == self.index:
-            # If removing current state, switch to closest
+            return removed
+
+        # if removed current → move to closest
+        if idx == self.index:
             self.index = min(idx, len(self.states) - 1)
-            self.state = self.states[self.index]
+
+        # if removed before current → shift left
         elif idx < self.index:
-            # Adjust current index if needed
             self.index -= 1
+
         return removed
 
+    # --- switching ---
     @state_changed
-    def set_state(self, idx: int):
-        """
-        Switch to a state by index.
-        """
-        if idx < 0 or idx >= len(self.states):
-            raise IndexError("State index out of range")
-        self.index = idx
+    def set_state(self, name: str):
+        idx = self.find_state_by_name(name)
+        if idx is None:
+            print(f'[WARNING] No state named "{name}"')
+            return False
         self.state = self.states[idx]
+        return True
 
     def find_state_by_name(self, name: str) -> Optional[int]:
-        """
-        Return the index of a state by its name, or None if not found.
-        """
         for i, s in enumerate(self.states):
             if s.name == name:
                 return i
         return None
 
+    # --- next & previous ---
     def next_state(self):
-        self.set_state(next_in_lst(self.states, self.index))
+        if self.state:
+            idx = next_in_lst(self.states, self.index)
+            self.set_state(self.states[idx].name)
 
     def previous_state(self):
-        self.set_state(previous_in_lst(self.states, self.index))
+        if self.state:
+            idx = previous_in_lst(self.states, self.index)
+            self.set_state(self.states[idx].name)

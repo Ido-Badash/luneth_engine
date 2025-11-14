@@ -6,8 +6,6 @@ class State(ABC):
     def __init__(self, name: str, game=None):
         self.name = name
         self.game = game
-        self.done = False
-        self.next: Optional[str] = None
 
     def startup(self):
         pass
