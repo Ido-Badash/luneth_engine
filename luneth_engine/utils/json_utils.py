@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from typing import Dict
+from .general_utils import resource_path
 
 
 def dict_to_json_file(data: Dict, path: str):
@@ -16,7 +17,7 @@ def dict_to_json_file(data: Dict, path: str):
 
 
 def dict_from_json_file(path: str) -> Dict:
-    path = Path(path)
+    path = Path(resource_path(path))  # wrap with resource_path()
     try:
         with path.open("r", encoding="utf-8") as f:
             data = json.load(f)
